@@ -502,7 +502,7 @@ def main():
             CONFIRM:       [MessageHandler(filters.TEXT & ~filters.COMMAND, confirm_handler)],
         },
         fallbacks=[CommandHandler("cancel", cancel)],
-        allow_reentry=True,
+        allow_reentry=False,
     )
 
     app.add_handler(conv)
