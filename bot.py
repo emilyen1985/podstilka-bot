@@ -1,7 +1,6 @@
 """
 Телеграм-бот: Подстилочный материал зоотехнический
-ООО «Дэлрой Экспо» — Производство Вологда / Киров
-Продажи: ИП Файзиев Эмиль Энгельсович
+ИП Файзиев Эмиль Энгельсович
 """
 
 import os, logging
@@ -26,23 +25,21 @@ logger = logging.getLogger(__name__)
 
 PRODUCT = {
     "name":     "Материал подстилочный зоотехнический",
-    "wood":     "Ель / Сосна (хвойные породы)",
+    "wood":     "Ель / Сосна",
     "fraction": "0,5–3 см",
     "moisture": "8–12%",
-    "package":  "Брикеты 60×30×40 см, ~20 кг, 0,25 м³",
-    "truck":    "16–18,8 тонн (800–880 брикетов)",
+    "package":  "Брикеты ~20 кг",
+    "truck":    "16–18,8 тонн",
     "price_kg": 12.0,
-    "cert":     "Сертификат качества на каждую партию",
-    "origin":   "Собственное производство — Вологда / Киров",
 }
 
 ANIMALS = {
-    "🐴 Лошади / Конный двор":           "Мировой стандарт. Московские ипподромы используют этот продукт.",
-    "🐄 КРС (коровы, быки)":             "Подходит для коровников. Влажность 8–12% — оптимально.",
-    "🐓 Птицеводство (бройлеры)":        "Цикл 42 дня — отлично. Применяется на птицефабриках.",
-    "🥚 Несушки / Родительское стадо":   "Применимо при хорошей вентиляции помещения.",
-    "🐷 Свиноводство":                   "Подходит для свинарников и откорма.",
-    "🔀 Смешанное хозяйство":            "Универсальный вариант для нескольких видов животных.",
+    "🐴 Лошади / Конный двор":           "Широко применяется в конюшнях и на конных дворах.",
+    "🐄 КРС (коровы, быки)":             "Применяется для коровников и откорма КРС.",
+    "🐓 Птицеводство (бройлеры)":        "Используется на птицефабриках напольного содержания.",
+    "🥚 Несушки / Родительское стадо":   "Применяется при напольном содержании птицы.",
+    "🐷 Свиноводство":                   "Подходит для свинарников всех типов.",
+    "🔀 Смешанное хозяйство":            "Подходит для хозяйств с несколькими видами животных.",
 }
 
 def main_keyboard():
@@ -63,10 +60,13 @@ def animal_keyboard():
         ["🔙 Назад в меню"],
     ], resize_keyboard=True)
 
+def back_keyboard(label="🔙 Назад"):
+    return ReplyKeyboardMarkup([[label]], resize_keyboard=True)
+
 def confirm_keyboard():
     return ReplyKeyboardMarkup([
         ["✅ Подтвердить заказ"],
-        ["✏️ Изменить данные", "❌ Отменить"],
+        ["🔙 Назад", "❌ Отменить"],
     ], resize_keyboard=True)
 
 async def start(update: Update, ctx: ContextTypes.DEFAULT_TYPE) -> int:
@@ -76,10 +76,9 @@ async def start(update: Update, ctx: ContextTypes.DEFAULT_TYPE) -> int:
         "🌿 *Подстилочный материал зоотехнический*\n"
         "━━━━━━━━━━━━━━━━━━━━\n\n"
         "🪵 Древесная стружка · Ель и Сосна\n"
-        "📦 Брикеты · удобная фасовка\n"
-        "💧 Влажность 8–12% · готова к применению\n"
-        "🏭 Собственное производство · Вологда / Киров\n"
-        "✅ Сертификат качества на каждую партию\n\n"
+        "📦 Удобная фасовка в брикетах\n"
+        "💧 Влажность 8–12%\n"
+        "✅ Сертификат качества\n\n"
         "🐴 Лошади · 🐄 КРС · 🐓 Птица · 🐷 Свиноводство\n\n"
         "Выберите действие 👇",
         parse_mode="Markdown",
@@ -111,6 +110,7 @@ async def main_menu_handler(update: Update, ctx: ContextTypes.DEFAULT_TYPE) -> i
 async def animal_type_handler(update: Update, ctx: ContextTypes.DEFAULT_TYPE) -> int:
     text = update.message.text
     if text == "🔙 Назад в меню":
+        ctx.user_data.clear()
         await update.message.reply_text("🏠 Главное меню:", reply_markup=main_keyboard())
         return MAIN_MENU
     if text not in ANIMALS:
@@ -118,55 +118,76 @@ async def animal_type_handler(update: Update, ctx: ContextTypes.DEFAULT_TYPE) ->
         return ANIMAL_TYPE
     ctx.user_data["animal"] = text
     await update.message.reply_text(
-        f"📦 *Оформление заказа*\n"
-        f"━━━━━━━━━━━━━━━━━━━━\n"
-        f"Шаг 2️⃣ из 4️⃣ — Количество\n\n"
-        f"✅ {text}\n"
-        f"_{ANIMALS[text]}_\n\n"
-        f"🚛 *1 фура = 16–18,8 тонн*\n"
-        f"💰 Цена: 12 руб/кг · доставка оплачивается отдельно\n\n"
-        f"Укажите нужный объём:\n"
-        f"• Количество фур: *1 фура*, *2 фуры*\n"
-        f"• Или тоннаж: *16 тонн*, *35 тонн*",
-        parse_mode="Markdown", reply_markup=ReplyKeyboardRemove()
+        f"📦 *Оформление заказа*\n━━━━━━━━━━━━━━━━━━━━\n"
+        f"Шаг 2️⃣ из 4️⃣ — Количество\n\n✅ {text}\n\n"
+        f"🚛 *1 фура = 16–18,8 тонн*\n💰 Цена: 12 руб/кг\n"
+        f"🚚 Доставка рассчитывается отдельно\n\n"
+        f"Укажите нужный объём:\n• *1 фура*, *2 фуры*\n• *16 тонн*, *35 тонн*",
+        parse_mode="Markdown", reply_markup=back_keyboard("🔙 Назад к выбору животных")
     )
     return QUANTITY
 
 async def quantity_handler(update: Update, ctx: ContextTypes.DEFAULT_TYPE) -> int:
-    ctx.user_data["quantity"] = update.message.text.strip()
+    text = update.message.text
+    if text == "🔙 Назад к выбору животных":
+        await update.message.reply_text(
+            "📦 *Шаг 1️⃣ из 4️⃣ — Вид животных*\n\n🐾 Для каких животных нужна подстилка?",
+            parse_mode="Markdown", reply_markup=animal_keyboard()
+        )
+        return ANIMAL_TYPE
+    ctx.user_data["quantity"] = text.strip()
     await update.message.reply_text(
-        "📦 *Оформление заказа*\n"
-        "━━━━━━━━━━━━━━━━━━━━\n"
+        "📦 *Оформление заказа*\n━━━━━━━━━━━━━━━━━━━━\n"
         "Шаг 3️⃣ из 4️⃣ — Хозяйство и район\n\n"
         "📍 Укажите район и название хозяйства:\n"
         "_Например: Арский район, ООО Агрофирма Север_\n\n"
         "ℹ️ Нужно для расчёта стоимости доставки",
-        parse_mode="Markdown"
+        parse_mode="Markdown", reply_markup=back_keyboard("🔙 Назад к количеству")
     )
     return DISTRICT
 
 async def district_handler(update: Update, ctx: ContextTypes.DEFAULT_TYPE) -> int:
-    ctx.user_data["district"] = update.message.text.strip()
+    text = update.message.text
+    if text == "🔙 Назад к количеству":
+        await update.message.reply_text(
+            "📦 *Шаг 2️⃣ из 4️⃣ — Количество*\n\n🚛 1 фура = 16–18,8 тонн\n\n"
+            "Укажите нужный объём:\n• *1 фура*, *2 фуры*\n• *16 тонн*, *35 тонн*",
+            parse_mode="Markdown", reply_markup=back_keyboard("🔙 Назад к выбору животных")
+        )
+        return QUANTITY
+    ctx.user_data["district"] = text.strip()
     await update.message.reply_text(
-        "📦 *Оформление заказа*\n"
-        "━━━━━━━━━━━━━━━━━━━━\n"
-        "Шаг 4️⃣ из 4️⃣ — Ваши контакты\n\n"
-        "👤 Ваше имя и должность:\n"
-        "_Например: Иван Иванов, главный зоотехник_",
-        parse_mode="Markdown"
+        "📦 *Оформление заказа*\n━━━━━━━━━━━━━━━━━━━━\n"
+        "Шаг 4️⃣ из 4️⃣ — Контакт\n\n"
+        "👤 Ваше имя и должность:\n_Например: Иван Иванов, главный зоотехник_",
+        parse_mode="Markdown", reply_markup=back_keyboard("🔙 Назад к адресу")
     )
     return CONTACT_NAME
 
 async def contact_name_handler(update: Update, ctx: ContextTypes.DEFAULT_TYPE) -> int:
-    ctx.user_data["contact_name"] = update.message.text.strip()
+    text = update.message.text
+    if text == "🔙 Назад к адресу":
+        await update.message.reply_text(
+            "📍 Укажите район и название хозяйства:\n_Например: Арский район, ООО Агрофирма Север_",
+            parse_mode="Markdown", reply_markup=back_keyboard("🔙 Назад к количеству")
+        )
+        return DISTRICT
+    ctx.user_data["contact_name"] = text.strip()
     await update.message.reply_text(
         "📞 Номер телефона для связи:\n_Например: +7 900 123 45 67_",
-        parse_mode="Markdown"
+        parse_mode="Markdown", reply_markup=back_keyboard("🔙 Назад к имени")
     )
     return CONTACT_PHONE
 
 async def contact_phone_handler(update: Update, ctx: ContextTypes.DEFAULT_TYPE) -> int:
-    ctx.user_data["contact_phone"] = update.message.text.strip()
+    text = update.message.text
+    if text == "🔙 Назад к имени":
+        await update.message.reply_text(
+            "👤 Ваше имя и должность:\n_Например: Иван Иванов, главный зоотехник_",
+            parse_mode="Markdown", reply_markup=back_keyboard("🔙 Назад к адресу")
+        )
+        return CONTACT_NAME
+    ctx.user_data["contact_phone"] = text.strip()
     d = ctx.user_data
     price_note = "💰 Цена: 12 руб/кг (без доставки)\n"
     try:
@@ -179,10 +200,9 @@ async def contact_phone_handler(update: Update, ctx: ContextTypes.DEFAULT_TYPE) 
             price_note = f"💰 Ориентировочно: *{int(n*1000*12):,} руб.* (без доставки)\n".replace(",", " ")
     except: pass
     await update.message.reply_text(
-        f"📋 *Проверьте вашу заявку*\n"
-        f"━━━━━━━━━━━━━━━━━━━━\n\n"
+        f"📋 *Проверьте вашу заявку*\n━━━━━━━━━━━━━━━━━━━━\n\n"
         f"🐾 Животные: {d.get('animal','—')}\n"
-        f"🪵 Стружка ель/сосна, фракция 0,5–3 см\n"
+        f"🪵 Продукт: Стружка ель/сосна, фракция 0,5–3 см\n"
         f"💧 Влажность: 8–12%\n"
         f"⚖️ Количество: {d.get('quantity','—')}\n"
         f"📍 Хозяйство: {d.get('district','—')}\n"
@@ -190,7 +210,7 @@ async def contact_phone_handler(update: Update, ctx: ContextTypes.DEFAULT_TYPE) 
         f"📞 Телефон: {d.get('contact_phone','—')}\n\n"
         f"━━━━━━━━━━━━━━━━━━━━\n"
         f"{price_note}"
-        f"🚚 Доставка рассчитывается индивидуально\n"
+        f"🚚 Стоимость доставки уточним при подтверждении\n"
         f"💳 Оплата: 100% предоплата\n"
         f"📄 Сертификат качества прилагается",
         parse_mode="Markdown", reply_markup=confirm_keyboard()
@@ -200,6 +220,12 @@ async def contact_phone_handler(update: Update, ctx: ContextTypes.DEFAULT_TYPE) 
 async def confirm_handler(update: Update, ctx: ContextTypes.DEFAULT_TYPE) -> int:
     text = update.message.text
     d = ctx.user_data
+    if text == "🔙 Назад":
+        await update.message.reply_text(
+            "📞 Номер телефона для связи:\n_Например: +7 900 123 45 67_",
+            parse_mode="Markdown", reply_markup=back_keyboard("🔙 Назад к имени")
+        )
+        return CONTACT_PHONE
     if text == "✅ Подтвердить заказ":
         user = update.effective_user
         try:
@@ -219,75 +245,76 @@ async def confirm_handler(update: Update, ctx: ContextTypes.DEFAULT_TYPE) -> int
             parse_mode="Markdown", reply_markup=main_keyboard()
         )
         ctx.user_data.clear(); return MAIN_MENU
-    elif text == "✏️ Изменить данные":
-        ctx.user_data.clear()
-        await update.message.reply_text("🔄 Начнём заново:", reply_markup=animal_keyboard())
-        return ANIMAL_TYPE
     elif text == "❌ Отменить":
         ctx.user_data.clear()
-        await update.message.reply_text("❌ Отменено.\n🏠 Главное меню:", reply_markup=main_keyboard())
+        await update.message.reply_text("❌ Заявка отменена.\n🏠 Главное меню:", reply_markup=main_keyboard())
         return MAIN_MENU
     return CONFIRM
 
 async def calculator_start(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
         "🧮 *Калькулятор расхода подстилки*\n━━━━━━━━━━━━━━━━━━━━\n\n"
-        "🪵 Стружка ель/сосна · фракция 0,5–3 см\n\nВыберите вид животных 👇",
+        "🪵 Стружка ель/сосна · фракция 0,5–3 см\n\n"
+        "⚠️ _Расчёт ориентировочный — фактический расход\nзависит от условий хозяйства._\n\n"
+        "Выберите вид животных 👇",
         parse_mode="Markdown",
         reply_markup=InlineKeyboardMarkup([
-            [InlineKeyboardButton("🐴 Лошади (денник 12 м²)", callback_data="calc_horse")],
-            [InlineKeyboardButton("🐄 КРС дойный (9 м²/гол)", callback_data="calc_dairy"),
-             InlineKeyboardButton("🐄 КРС откорм (5 м²/гол)", callback_data="calc_beef")],
-            [InlineKeyboardButton("🐓 Бройлеры (20 гол/м²)", callback_data="calc_broiler"),
-             InlineKeyboardButton("🥚 Несушки (7,5 гол/м²)", callback_data="calc_hen")],
-            [InlineKeyboardButton("🐷 Свиноматка (2,8 м²/гол)", callback_data="calc_sow"),
-             InlineKeyboardButton("🐷 Откорм свиней (1 м²/гол)", callback_data="calc_pig")],
+            [InlineKeyboardButton("🐴 Лошади (денник ~12 м²)", callback_data="calc_horse")],
+            [InlineKeyboardButton("🐄 КРС дойный (~9 м²/гол)", callback_data="calc_dairy"),
+             InlineKeyboardButton("🐄 КРС откорм (~5 м²/гол)", callback_data="calc_beef")],
+            [InlineKeyboardButton("🐓 Бройлеры (~20 гол/м²)", callback_data="calc_broiler"),
+             InlineKeyboardButton("🥚 Несушки (~7 гол/м²)", callback_data="calc_hen")],
+            [InlineKeyboardButton("🐷 Свиноматка (~3 м²/гол)", callback_data="calc_sow"),
+             InlineKeyboardButton("🐷 Откорм свиней (~1 м²/гол)", callback_data="calc_pig")],
         ])
     )
 
 async def calculator_callback(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query; await query.answer()
+    DENSITY = 85
     configs = {
-        "calc_horse":   ("🐴 Лошади",       12,  "m2", 10),
-        "calc_dairy":   ("🐄 КРС дойный",    9,  "m2", 8),
-        "calc_beef":    ("🐄 КРС откорм",    5,  "m2", 6),
-        "calc_broiler": ("🐓 Бройлеры",      20, "hl", 7),
-        "calc_hen":     ("🥚 Несушки",       7.5,"hl", 6),
-        "calc_sow":     ("🐷 Свиноматка",    2.8,"m2", 7),
-        "calc_pig":     ("🐷 Откорм свиней", 1.0,"m2", 5),
+        "calc_horse":   ("🐴 Лошади",         12,  "m2", 10),
+        "calc_dairy":   ("🐄 КРС дойный",      9,  "m2", 8),
+        "calc_beef":    ("🐄 КРС откорм",       5,  "m2", 6),
+        "calc_broiler": ("🐓 Бройлеры",         20, "hl", 7),
+        "calc_hen":     ("🥚 Несушки",          7,  "hl", 6),
+        "calc_sow":     ("🐷 Свиноматка",       3,  "m2", 7),
+        "calc_pig":     ("🐷 Откорм свиней",    1,  "m2", 5),
     }
     if query.data not in configs: return
     name, norm, mode, layer = configs[query.data]
-    D = 85; truck = 17000
-    per_m2 = D * (layer/100); m2t = truck/per_m2
+    truck_kg = 17000; per_m2 = DENSITY*(layer/100); m2t = truck_kg/per_m2
     if mode == "hl":
         pt = round(m2t*norm/1000)*1000
         line = f"🐾 ~{pt:,} голов".replace(",", " ")
         div  = f"Поголовье ÷ {pt:,} = кол-во фур".replace(",", " ")
     else:
         pt = round(m2t/norm)
-        line = f"🐾 ~{pt} голов (по {norm} м²/гол)"
+        line = f"🐾 ~{pt} голов (при {norm} м²/гол)"
         div  = f"Поголовье ÷ {pt} = кол-во фур"
+    cost = int(truck_kg * PRODUCT["price_kg"])
     await query.edit_message_text(
-        f"🧮 *{name}*\n━━━━━━━━━━━━━━━━━━━━\n\n"
-        f"📐 Слой: {layer} см · Расход: {per_m2:.1f} кг/м²\n\n"
+        f"🧮 *{name} — ориентировочный расчёт*\n━━━━━━━━━━━━━━━━━━━━\n\n"
+        f"📐 Слой засыпки: {layer} см · Расход: ~{per_m2:.1f} кг/м²\n\n"
         f"*1 фура (~17 тонн) покрывает:*\n"
         f"📏 ~{round(m2t):,} м² пола\n{line}\n\n".replace(",", " ") +
-        f"💰 Стоимость 1 фуры: *~{truck*12:,} руб.* (без доставки)\n\n".replace(",", " ") +
-        f"📊 *Ваш расчёт:*\n{div}\n\n_Напишите /start чтобы оформить заказ_ 👇",
+        f"💰 Стоимость 1 фуры: ~{cost:,} руб. (без доставки)\n\n".replace(",", " ") +
+        f"📊 *Сколько фур нужно вам:*\n{div}\n\n"
+        f"⚠️ _Расчёт ориентировочный. Уточняйте с менеджером._\n\n"
+        f"_Напишите /start чтобы оформить заказ_ 👇",
         parse_mode="Markdown"
     )
 
 async def about_product(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    p = PRODUCT
     await update.message.reply_text(
-        f"📋 *О продукте*\n━━━━━━━━━━━━━━━━━━━━\n\n🪵 *{p['name']}*\n\n"
-        f"🌲 Сырьё: {p['wood']}\n📐 Фракция: {p['fraction']}\n"
-        f"💧 Влажность: {p['moisture']}\n📦 Упаковка: {p['package']}\n"
-        f"🚛 1 фура: {p['truck']}\n💰 Цена: *12 руб/кг* (доставка отдельно)\n\n"
-        f"━━━━━━━━━━━━━━━━━━━━\n✅ {p['cert']}\n🏭 {p['origin']}\n\n"
-        f"*Применяется для:*\n🐴 Лошади  🐄 КРС  🐓 Птица  🐷 Свиноводство\n\n"
-        f"🚚 Доставка рассчитывается индивидуально",
+        f"📋 *О продукте*\n━━━━━━━━━━━━━━━━━━━━\n\n"
+        f"🪵 *{PRODUCT['name']}*\n\n"
+        f"🌲 Сырьё: {PRODUCT['wood']}\n📐 Фракция: {PRODUCT['fraction']}\n"
+        f"💧 Влажность: {PRODUCT['moisture']}\n📦 Упаковка: {PRODUCT['package']}\n"
+        f"🚛 1 фура: {PRODUCT['truck']}\n💰 Цена: *12 руб/кг*\n\n"
+        f"━━━━━━━━━━━━━━━━━━━━\n✅ Сертификат качества\n\n"
+        f"*Применяется для:*\n🐴 Лошади · 🐄 КРС · 🐓 Птица · 🐷 Свиноводство\n\n"
+        f"🚚 Стоимость доставки рассчитывается индивидуально\n📞 Уточнить — {ADMIN_PHONE}",
         parse_mode="Markdown", reply_markup=main_keyboard()
     )
 
