@@ -30,7 +30,7 @@ PRODUCT = {
     "moisture": "8–12%",
     "package":  "Брикеты ~20 кг",
     "truck":    "16–18,8 тонн",
-    "price_kg": 12.0,
+    "price_kg": 11.0,
 }
 
 ANIMALS = {
@@ -120,7 +120,7 @@ async def animal_type_handler(update: Update, ctx: ContextTypes.DEFAULT_TYPE) ->
     await update.message.reply_text(
         f"📦 *Оформление заказа*\n━━━━━━━━━━━━━━━━━━━━\n"
         f"Шаг 2️⃣ из 4️⃣ — Количество\n\n✅ {text}\n\n"
-        f"🚛 *1 фура = 16–18,8 тонн*\n💰 Цена: 12 руб/кг\n"
+        f"🚛 *1 фура = 16–18,8 тонн*\n💰 Цена: {int(PRODUCT['price_kg'])} руб/кг\n"
         f"🚚 Доставка рассчитывается отдельно\n\n"
         f"Укажите нужный объём:\n• *1 фура*, *2 фуры*\n• *16 тонн*, *35 тонн*",
         parse_mode="Markdown", reply_markup=back_keyboard("🔙 Назад к выбору животных")
@@ -189,15 +189,15 @@ async def contact_phone_handler(update: Update, ctx: ContextTypes.DEFAULT_TYPE) 
         return CONTACT_NAME
     ctx.user_data["contact_phone"] = text.strip()
     d = ctx.user_data
-    price_note = "💰 Цена: 12 руб/кг (без доставки)\n"
+    price_note = f"💰 Цена: {int(PRODUCT['price_kg'])} руб/кг (без доставки)\n"
     try:
         qty = d.get("quantity", "")
         if "фур" in qty.lower():
             n = float(''.join(c for c in qty.split()[0] if c.isdigit() or c=='.'))
-            price_note = f"💰 Ориентировочно: *{int(n*17000*12):,} руб.* (без доставки)\n".replace(",", " ")
+            price_note = f"💰 Ориентировочно: *{int(n*17000*PRODUCT['price_kg']):,} руб.* (без доставки)\n".replace(",", " ")
         elif "тонн" in qty.lower() or "тн" in qty.lower():
             n = float(''.join(c for c in qty.split()[0] if c.isdigit() or c=='.'))
-            price_note = f"💰 Ориентировочно: *{int(n*1000*12):,} руб.* (без доставки)\n".replace(",", " ")
+            price_note = f"💰 Ориентировочно: *{int(n*1000*PRODUCT['price_kg']):,} руб.* (без доставки)\n".replace(",", " ")
     except: pass
     await update.message.reply_text(
         f"📋 *Проверьте вашу заявку*\n━━━━━━━━━━━━━━━━━━━━\n\n"
@@ -311,7 +311,7 @@ async def about_product(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         f"🪵 *{PRODUCT['name']}*\n\n"
         f"🌲 Сырьё: {PRODUCT['wood']}\n📐 Фракция: {PRODUCT['fraction']}\n"
         f"💧 Влажность: {PRODUCT['moisture']}\n📦 Упаковка: {PRODUCT['package']}\n"
-        f"🚛 1 фура: {PRODUCT['truck']}\n💰 Цена: *12 руб/кг*\n\n"
+        f"🚛 1 фура: {PRODUCT['truck']}\n💰 Цена: *{int(PRODUCT['price_kg'])} руб/кг*\n\n"
         f"━━━━━━━━━━━━━━━━━━━━\n✅ Сертификат качества\n\n"
         f"*Применяется для:*\n🐴 Лошади · 🐄 КРС · 🐓 Птица · 🐷 Свиноводство\n\n"
         f"🚚 Стоимость доставки рассчитывается индивидуально\n📞 Уточнить — {ADMIN_PHONE}",
